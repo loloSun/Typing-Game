@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<style>
+		*{
+			margin:0;
+			padding:0;
+			list-style: none;
+		}
+		html,body{
+			height: 100%;
+		}
+		.box{
+			width: 100%;
+			height: 100%;
+			position: relative;
+			background: url(img/back.jpg) no-repeat center;
+			background-size: 100% 100%;
+		}
+		.box-top{
+			width:100%;
+			height: 93%;
+			position: relative;
+			float: left;
+		}
+		.ready,.again,.medium,.diff,.win{
+			width: 800px;
+			height: 400px;
+			left: 50%;
+			margin-left:-400px;
+			text-align: center;
+			background-color: #071748;
+			position: absolute;
+			border:2px solid #fff;
+			font-size: 50px;
+			border-radius: 20%;
+			color:#fff;
+			z-index: 100;
+		}
+		.ready>p:first-child,.win>p:first-child,.again>p,.medium>p,.diff>p{
+			margin-top: 100px;
+		}
+		.ready>#start-btn,.again>#again-btn,.medium>#medium-btn,.diff>#diff-btn,.win>#win-btn{
+			width: 180px;
+			height: 50px;
+			font-size: 20px;
+			text-align: center;
+			background-color: #0C2775;
+			border:3px solid #fff;
+			border-radius: 20%;
+			color:#fff;
+			margin-top: 50px;
+		}
+		.ready>#set{
+			width: 60px;
+			height: 30px;
+			position: absolute;
+			top:50px;
+			right:50px;
+			background-color: #0C2775;
+			border:2px solid #fff;
+			border-radius: 20%;
+			color:#fff;
+		}
+		.letter{
+			width: 40px;
+			height: 40px;
+			background: rgba(7,102,225,.7);
+			text-align: center;
+			float: left;
+			font-size: 25px;
+			position: absolute;	
+			color:#fff;
+			border-radius: 30%;
+			line-height: 40px;
+			transition: all 0.1s;	
+		}
+		.box-bottom{
+			width: 100%;
+			height: 7%;
+			border-top:2px dotted #fff;
+			background: #0D2A7A;
+			box-sizing: border-box;
+			text-align: center;
+			float: left;
+			display: none;
+			position: relative;
+			color:#fff;
+		}
+		.box-bottom>span{
+			font-size: 16px;
+			position: absolute;
+
+		}
+		.box-bottom>span:first-child{
+			right:100px;
+			top:12px;
+		}
+		.box-bottom>span:last-child{
+			right:200px;
+			top:12px;
+		}
+		.box-bottom>#text{
+			width: 100px;
+			border:null;
+		}
+	</style>
+	<body>
+		<div class="box">
+			<div class="ready">
+				<p>JavaScript</p>
+				<p>打字游戏</p>
+				<button id='start-btn'>开始游戏</button>
+			</div>
+			<div class="box-top"></div>
+			<div class="box-bottom">
+				<span id='grade'>分数 : 0</span>
+			</div>
+			<div class="again">
+				<p>闯关失败</p>
+				<button id='again-btn'>重新开始</button>
+			</div>
+			<!-- 中级模式 -->
+			<div class="medium">
+				<p>闯关成功</p>
+				<button id="medium-btn">进入下一关</button>
+			</div>
+			<div class="diff">
+				<p>闯关成功</p>
+				<button id="diff-btn">进入下一关</button>
+			</div>
+			<div class="win">
+				<p>闯关成功</p>
+				<p>游戏结束</p>
+				<button id="win-btn">再来一次</button>
+			</div>
+		</div>
+	</body>
+	<script src="js/animate.js"></script>
+	<script>
+	// 面向对象形式
+		// 1、26个字母
+		// 2、随机生成n个字母
+		// 3、点击开始，随机字母出现并飘落
+		function Game(obj,ready,bottom){
+			// letter字母
+			// 随机产生字母
+			this.letterlist = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+			this.ready = document.querySelector(ready);
+			this.box_bottom = document.querySelector(bottom);
+			this.startbtn = document.querySelector(obj); // 开始游戏按钮
+			
+			this.grade = document.querySelector('#grade'); // 分数
+			
+			this.again = document.querySelector('.again'); // 再来一次
+			this.again_btn = document.querySelector('#again-btn');
+			this.again.style.display = 'none';
+			
+			this.medium = document.querySelector('.medium');  // 中等模式
+			this.medium_btn = document.querySelector('#medium-btn');
+			this.medium.style.display = 'none';
+			
+			this.diff = document.querySelector('.diff'); // 困难模式
+			this.diff_btn = document.querySelector('#diff-btn');
+			this.diff.style.display = 'none';
+			
+			this.win = document.querySelector('.win'); // 通关
+			this.win_btn = document.querySelector('#win-btn');
+			this.win.style.display = 'none';
+			
+			var _this = this;
+			this.t = null;
+			this.action();
+			this.box_top = document.querySelector('.box-top');
+			this.Height = document.documentElement.clientHeight;
+			// 开始游戏按钮
+			this.startbtn.onclick = function(){
+				_this.box_bottom.style.display = 'block';
+				_this.start();
+				animate(_this.ready,{top:-500},300)
+			}
+			// 闯关失败
+			this.again_btn.onclick = function(){
+				_this.box_bottom.style.display = 'block';
+				animate(_this.again,{top:-500},300)
+				_this.success();
+			}
+			// 中等难度
+			this.medium_btn.onclick = function(){
+				_this.mediumfn();
+			}
+			// 困难难度
+			this.diff_btn.onclick = function(){
+				_this.difficult();
+			}
+			// 通关
+			this.win_btn.onclick = function(){
+				_this.success();
+			}
+		}
+		Game.prototype = {
+			// 开始动画
+			action:function(){
+				var _this = this;
+				this.score = 0;
+				this.count= 2;
+				this.box_bottom.style.display = 'none';
+				animate(this.ready,{top:100},700,function(){
+					animate(_this.ready,{top:80},200,function(){
+						animate(_this.ready,{top:100},200);
+					});
+				});		
+			},
+			// 开始游戏
+			start:function(){
+				this.createDiv(2);
+				this.t = setInterval(this.divDown.bind(this,4,50,2,this.medium),50);
+			},
+			// 创建div
+			createDiv:function(num){
+				for(var i = 0;i < num;i++){
+					var div = document.createElement('div');
+					div.style.left = Math.floor(Math.random()*1000) + 100 + 'px';
+					div.style.top = 0;
+					div.className = 'letter';
+					div.innerHTML = this.letterlist[Math.floor(Math.random()*26)];
+					this.box_top.appendChild(div);
+				}
+			},
+			// div下落
+			divDown:function(speed,some,num,fn){
+				// 速度值、deleteDiv的参数
+				this.divs = document.getElementsByClassName('letter')
+				for(var i = 0;i < this.divs.length;i++){
+					var top = parseInt(this.divs[i].style.top);  // 获取初始值，得到字符串，parseInt强制转换
+					if(top >= this.Height-50){
+						this.box_top.innerHTML = '';
+						this.again.style.display = 'block';
+						this.box_bottom.style.display = 'none';
+						animate(this.again,{top:100},500);
+						this.score = 0;
+						this.grade.innerHTML = '分数 ：' + 0;
+						this.count = num;
+						clearInterval(this.t);
+					} else {
+						this.result = top + speed; // 速度值
+						this.divs[i].style.top = this.result + 'px';
+					}				
+				};
+				this.deleteDiv(some,num,fn);
+			},
+			deleteDiv:function(some,num,fn){
+			// 以参数形式传入三个关卡的分数值、三个关卡的count数、通关动画
+				var _this = this;
+				document.onkeydown = function(e){
+					var e = e || event;
+					var keyStr = String.fromCharCode(e.keyCode);	
+					for(var i = 0;i < _this.divs.length;i++){
+						if(keyStr === _this.divs[i].innerHTML){
+						// 效果：当按下一个键时，这个键对应的盒子消失，同时生成一个随机盒子
+							_this.divs[i].remove();
+							_this.count--;
+							_this.score++;
+							if(_this.score == some){
+								_this.box_top.innerHTML = '';
+								_this.count = num+1;
+								fn.style.display = 'block';
+								_this.box_bottom.style.display = 'none';
+								animate(fn,{top:100},500);
+								clearInterval(_this.t);
+							}
+							_this.grade.innerHTML = '分数 ：' + _this.score;
+							if(_this.count == num-1){
+								_this.createDiv(1);
+								_this.count = num;
+							}
+						} 
+					}
+				}
+			},
+			// 中级模式
+			mediumfn:function(){
+				this.box_bottom.style.display = 'block';
+				animate(this.medium,{top:-500},300)
+				this.createDiv(3);
+				this.t = setInterval(this.divDown.bind(this,5,80,3,this.diff),50);
+			},
+			// 困难模式
+			difficult:function(){
+				this.box_bottom.style.display = 'block';
+				animate(this.diff,{top:-500},300)
+				this.createDiv(4);
+				this.t = setInterval(this.divDown.bind(this,6,100,4,this.win),50);
+			},
+			// 结束
+			success:function(){
+				this.box_bottom.style.display = 'block';
+				animate(this.win,{top:-500},300);
+				this.action();
+				this.createDiv(0);
+				this.grade.innerHTML = '分数 ：' + 0;
+			}
+		}
+		new Game('#start-btn','.ready','.box-bottom');
+	</script>
+</html>
